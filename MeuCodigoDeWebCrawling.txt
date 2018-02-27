@@ -1,0 +1,52 @@
+﻿import kivy,sqlite3,requests
+from bs4 import BeautifulSoup
+
+class WebCrawler:
+    def pegar_titulos(content):
+        sopa = BeautifulSoup(content, "lxml")
+        tag = sopa.find("title", text=True)
+        if not tag:
+            return None
+        return tag.string.strip()
+
+    def AcharLinks(content):
+        Sopa = BeautifulSoup(content, "lxml")
+        links = set()
+        for tag in Sopa.find_all("a", href=True):
+            if tag["href"].startswith("http"):
+                links.add(tag["href"])
+                # se a tag achada, for um link que começa com  http, ele irá adiciona-la ao Set() gerado fora do For
+        return links
+
+    def crawling(Url_inicio):
+        Paginas_vistas = set([Url_inicio])
+        paginas_disponiveis = set([Url_inicio])
+        while paginas_disponiveis:
+            url = paginas_disponiveis.pop()
+
+            try:
+                conteudo = requests.get(url, timeout=5).text
+            except Exception:
+                continue
+
+            titulo = WebCrawler.pegar_titulos(conteudo)
+
+            if titulo:
+                print(titulo)
+                print(url)
+                print("_____________________________________")
+
+            for link in WebCrawler.AcharLinks(conteudo):
+                if link not in Paginas_vistas:
+                    Paginas_vistas.add(link)
+                    paginas_disponiveis.add(link)
+Linknovinho = input("Insira um link : ")
+Pagina = ("http://"+Linknovinho)
+# Chamo o request aqui, para pegar o html, lembrando que eu usei o HTTP para a pessoa não ter que digitar ele no link
+# titulo = pegar_titulos(requests.get("http://"+Linknovinho).text)
+# Crawl = ("http://(inserir link))
+# Link = ("http://(inserir link))
+try:
+    WebCrawler.crawling(Pagina)
+except KeyboardInterrupt:
+    print("Acabou a varredura.")
